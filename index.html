@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pelatih Fokus – Focus Trainer</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ===== NAV BAR ===== -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">🧠</span>
+      <span class="brand-name">Pelatih Fokus</span>
+    </div>
+    <div class="nav-links">
+      <button class="nav-btn active" data-screen="timer">⏱ Timer</button>
+      <button class="nav-btn" data-screen="test">⚡ Mini-Tes</button>
+      <button class="nav-btn" data-screen="analytics">📊 Analitik</button>
+    </div>
+  </nav>
+
+  <!-- ===== TIMER SCREEN ===== -->
+  <div id="screen-timer" class="screen active">
+    <div class="screen-inner">
+
+      <!-- Session label -->
+      <div class="session-label" id="session-label">
+        <span class="session-badge" id="session-badge">Fokus</span>
+        <span class="session-count" id="session-count">Sesi 1</span>
+      </div>
+
+      <!-- Circular timer -->
+      <div class="timer-ring-wrap">
+        <svg class="timer-ring" viewBox="0 0 200 200">
+          <circle class="ring-track" cx="100" cy="100" r="88" />
+          <circle class="ring-progress" id="ring-progress" cx="100" cy="100" r="88" />
+        </svg>
+        <div class="timer-display">
+          <div class="timer-time" id="timer-display">25:00</div>
+          <div class="timer-phase" id="timer-phase">Pomodoro</div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="timer-controls">
+        <button class="btn btn-icon" id="btn-reset" title="Reset">↩</button>
+        <button class="btn btn-primary btn-large" id="btn-start">▶ Mulai</button>
+        <button class="btn btn-icon" id="btn-skip" title="Lewati">⏭</button>
+      </div>
+
+      <!-- Pomodoro mode selector -->
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="pomodoro">Pomodoro (25m)</button>
+        <button class="mode-tab" data-mode="short">Istirahat Pendek (5m)</button>
+        <button class="mode-tab" data-mode="long">Istirahat Panjang (15m)</button>
+      </div>
+
+      <!-- Distraction panel -->
+      <div class="distraction-panel">
+        <div class="distraction-header">
+          <span class="dist-title">🔔 Catat Gangguan</span>
+          <span class="dist-count-badge" id="dist-count-badge">0 kali</span>
+        </div>
+        <p class="dist-hint">Tiap kali terdistraksi, catat jenis gangguannya.</p>
+
+        <div class="dist-quick-btns">
+          <button class="dist-btn" data-type="sosmed">📱 Sosmed</button>
+          <button class="dist-btn" data-type="pikiran">💭 Pikiran</button>
+          <button class="dist-btn" data-type="suara">🔊 Suara</button>
+          <button class="dist-btn" data-type="notif">🔔 Notifikasi</button>
+          <button class="dist-btn" data-type="ngobrol">🗣 Ngobrol</button>
+          <button class="dist-btn" data-type="lainnya">❓ Lainnya</button>
+        </div>
+
+        <!-- Distraction log -->
+        <div class="dist-log" id="dist-log">
+          <p class="dist-log-empty">Belum ada gangguan dicatat sesi ini.</p>
+        </div>
+      </div>
+
+      <!-- Limitation note -->
+      <div class="note-box">
+        <span class="note-icon">⚠️</span>
+        <p>Data gangguan bersifat <strong>self-report</strong> (laporan diri), sehingga bersifat subjektif. Aplikasi ini bertujuan <em>memantau dan meningkatkan kesadaran atensi</em>, bukan klaim "melatih atensi" secara klinis.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== MINI-TEST SCREEN ===== -->
+  <div id="screen-test" class="screen">
+    <div class="screen-inner">
+
+      <div class="test-header">
+        <h2>⚡ Mini-Tes Atensi</h2>
+        <p class="subtitle">Ukur waktu reaksi & akurasi. Lakukan di awal/akhir sesi untuk melihat perubahan.</p>
+      </div>
+
+      <!-- Test type selector -->
+      <div class="test-type-tabs">
+        <button class="test-tab active" data-test="reaction">⚡ Waktu Reaksi</button>
+        <button class="test-tab" data-test="attention">🎯 Atensi Selektif</button>
+      </div>
+
+      <!-- Reaction time test -->
+      <div id="test-reaction" class="test-panel active">
+        <div class="reaction-box" id="reaction-box">
+          <div class="reaction-instruction" id="reaction-instruction">
+            <p>Tekan tombol <strong>SEKARANG</strong> saat lingkaran berubah menjadi <span class="go-text">HIJAU</span></p>
+            <button class="btn btn-primary" id="btn-start-reaction">Mulai Tes</button>
+          </div>
+          <div class="reaction-waiting hidden" id="reaction-waiting">
+            <div class="wait-circle" id="wait-circle">Tunggu...</div>
+            <p class="wait-hint">Jangan tekan dulu...</p>
+          </div>
+          <div class="reaction-go hidden" id="reaction-go">
+            <div class="go-circle" id="go-circle" tabindex="0">TEKAN!</div>
+          </div>
+          <div class="reaction-result hidden" id="reaction-result">
+            <div class="result-value" id="reaction-ms">— ms</div>
+            <div class="result-label">Waktu Reaksi</div>
+            <div class="result-rating" id="reaction-rating"></div>
+            <div class="result-history">
+              <p class="result-hist-title">Riwayat Sesi Ini</p>
+              <div id="reaction-history-list" class="history-chips"></div>
+            </div>
+            <button class="btn btn-outline" id="btn-retry-reaction">🔄 Ulang</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selective attention test (color-word Stroop-inspired) -->
+      <div id="test-attention" class="test-panel">
+        <div class="attention-box" id="attention-box">
+          <div class="attention-intro" id="attention-intro">
+            <p>Pilih <strong>WARNA</strong> teks yang ditampilkan, bukan kata yang tertulis.</p>
+            <p class="attention-hint">Contoh: jika tertulis <span style="color:#ff6b6b">BIRU</span>, jawaban benar adalah <strong>MERAH</strong>.</p>
+            <div class="attention-meta">
+              <span>10 soal &nbsp;|&nbsp; Skor: akurasi + kecepatan</span>
+            </div>
+            <button class="btn btn-primary" id="btn-start-attention">Mulai Tes</button>
+          </div>
+
+          <div class="attention-question hidden" id="attention-question">
+            <div class="q-progress">
+              <div class="q-prog-bar" id="q-prog-bar" style="width:0%"></div>
+            </div>
+            <div class="q-count" id="q-count">1 / 10</div>
+            <div class="q-word" id="q-word">MERAH</div>
+            <div class="q-choices" id="q-choices"></div>
+            <div class="q-feedback" id="q-feedback"></div>
+          </div>
+
+          <div class="attention-result hidden" id="attention-result">
+            <div class="result-value" id="att-score">0 / 10</div>
+            <div class="result-label">Akurasi</div>
+            <div class="result-sub" id="att-avg-rt">Rata-rata RT: — ms</div>
+            <div class="result-rating" id="att-rating"></div>
+            <button class="btn btn-outline" id="btn-retry-attention">🔄 Ulang</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theory note -->
+      <div class="note-box">
+        <span class="note-icon">📚</span>
+        <p>Berdasarkan konsep <em>sustained attention</em> dan <em>vigilance decrement</em> — performa atensi cenderung menurun seiring waktu tanpa jeda. Mini-tes ini mengukur <em>reaction time</em> (RT) dan akurasi sebagai indikator kondisi atensi.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== ANALYTICS SCREEN ===== -->
+  <div id="screen-analytics" class="screen">
+    <div class="screen-inner analytics-inner">
+
+      <div class="analytics-header">
+        <h2>📊 Analitik Harian</h2>
+        <p class="subtitle">Perkembangan fokus dan gangguan Anda dari waktu ke waktu.</p>
+        <button class="btn btn-danger btn-sm" id="btn-clear-data">🗑 Hapus Semua Data</button>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="summary-cards">
+        <div class="s-card">
+          <div class="s-val" id="s-total-sessions">0</div>
+          <div class="s-lbl">Total Sesi</div>
+        </div>
+        <div class="s-card">
+          <div class="s-val" id="s-avg-dist">0</div>
+          <div class="s-lbl">Rata-rata Distraksi/Sesi</div>
+        </div>
+        <div class="s-card">
+          <div class="s-val" id="s-best-rt">— ms</div>
+          <div class="s-lbl">RT Terbaik</div>
+        </div>
+        <div class="s-card">
+          <div class="s-val" id="s-avg-acc">—%</div>
+          <div class="s-lbl">Rata-rata Akurasi</div>
+        </div>
+      </div>
+
+      <!-- Charts grid -->
+      <div class="charts-grid">
+
+        <!-- RT & Accuracy trend -->
+        <div class="chart-card chart-wide">
+          <div class="chart-title">⚡ RT & Akurasi Mini-Tes per Hari</div>
+          <div class="chart-wrap">
+            <canvas id="chart-rt-acc"></canvas>
+          </div>
+        </div>
+
+        <!-- Distractions per session -->
+        <div class="chart-card chart-wide">
+          <div class="chart-title">🔔 Jumlah Distraksi per Sesi</div>
+          <div class="chart-wrap">
+            <canvas id="chart-dist-session"></canvas>
+          </div>
+        </div>
+
+        <!-- Distraction type pie -->
+        <div class="chart-card">
+          <div class="chart-title">🥧 Distribusi Jenis Gangguan</div>
+          <div class="chart-wrap chart-wrap-sq">
+            <canvas id="chart-dist-type"></canvas>
+          </div>
+          <div id="pie-legend" class="pie-legend"></div>
+        </div>
+
+        <!-- Productive hours heatmap-style -->
+        <div class="chart-card">
+          <div class="chart-title">🕐 Jam Produktif (Distraksi Paling Sedikit)</div>
+          <div class="chart-wrap chart-wrap-sq">
+            <canvas id="chart-productive-hours"></canvas>
+          </div>
+          <p class="chart-note">Bar lebih pendek = lebih sedikit gangguan = lebih produktif</p>
+        </div>
+
+      </div>
+
+      <!-- Empty state -->
+      <div id="analytics-empty" class="empty-state hidden">
+        <div class="empty-icon">📭</div>
+        <p>Belum ada data. Mulai sesi Pomodoro dan lakukan mini-tes untuk melihat analitik.</p>
+      </div>
+
+      <!-- Self-report limitation note -->
+      <div class="note-box">
+        <span class="note-icon">⚠️</span>
+        <p><strong>Keterbatasan:</strong> Data distraksi bersifat <em>self-report</em> sehingga rentan bias. Untuk evaluasi yang lebih valid, gunakan aplikasi ini secara konsisten selama 7 hari dan bandingkan skor hari pertama dengan hari terakhir (lihat referensi: Oken et al., 2006 tentang sustained attention; Smallwood & Schooler, 2006 tentang mind wandering).</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== NOTIFICATION TOAST ===== -->
+  <div id="toast" class="toast hidden">
+    <span id="toast-icon">✅</span>
+    <span id="toast-msg">Tersimpan</span>
+  </div>
+
+  <!-- ===== SESSION COMPLETE MODAL ===== -->
+  <div id="session-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-icon" id="modal-icon">🎉</div>
+      <h3 id="modal-title">Sesi Selesai!</h3>
+      <p id="modal-body">Waktu fokus 25 menit selesai. Ambil istirahat singkat.</p>
+      <div class="modal-stats" id="modal-stats"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="modal-continue">✅ Lanjutkan</button>
+        <button class="btn btn-outline" id="modal-test">⚡ Ambil Mini-Tes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
